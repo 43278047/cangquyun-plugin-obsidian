@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 }
 
 export default class MyPlugin extends Plugin {
-    settings: MyPluginSettings;
+    settings!: MyPluginSettings;
 
     async onload() {
         await this.loadSettings();

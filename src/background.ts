@@ -1,7 +1,6 @@
-// background.js
-const fs = require('fs');
-const path = require('path');
-const { Notice } = require('obsidian');
+import * as fs from 'fs';
+import * as path from 'path';
+import { Notice } from 'obsidian';
 
 // Mock 数据
 const mockData = [
@@ -23,7 +22,7 @@ const mockData = [
 ];
 
 // 同步函数
-async function syncBookmarkData(app, defaultDirectory) {
+async function syncBookmarkData(app: any, defaultDirectory: string): Promise<void> {
     const vault = app.vault;
     const basePath = path.join(vault.adapter.basePath, defaultDirectory);
 
@@ -43,14 +42,14 @@ async function syncBookmarkData(app, defaultDirectory) {
 }
 
 // 创建目录
-async function createDirectory(directoryPath) {
+async function createDirectory(directoryPath: string): Promise<void> {
     if (!fs.existsSync(directoryPath)) {
         fs.mkdirSync(directoryPath, { recursive: true });
     }
 }
 
 // 创建文件并写入内容
-async function createFile(filePath, content) {
+async function createFile(filePath: string, content: string): Promise<void> {
     // 如果文件存在，先删除它
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -59,6 +58,4 @@ async function createFile(filePath, content) {
     fs.writeFileSync(filePath, content);
 }
 
-module.exports = {
-    syncBookmarkData
-};
+export { syncBookmarkData };
