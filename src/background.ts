@@ -1,50 +1,66 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Notice } from 'obsidian';
+import {Notice, Vault} from 'obsidian';
+import {getBookmarkContentList} from './api';
+import FileNameUtils from "./utils"; // 假设你的文件名为 api.ts
 
-// Mock 数据
-const mockData = [
-    {
-        title: '标题 文章1',
-        content: '# 文章1\n\n这是文章1的内容。888888888',
-        date: '2023-10-01'
-    },
-    {
-        title: '标题 文章2',
-        content: '# 文章2\n\n这是文章2的内容。',
-        date: '2023-10-02'
-    },
-    {
-        title: '标题 文章3',
-        content: '# 文章3\n\n这是文章3的内容。',
-        date: '2023-10-03'
-    }
-];
-
+const pageSize = 50;
 // 同步函数
-async function syncBookmarkData(app: any, defaultDirectory: string): Promise<void> {
+async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: string): Promise<void> {
+    let pageNum = 1;
+    let count = 0;
+    try {
+        // 无限循环的翻页至到 response.data = []
+        while (true) {
+            const response = await getBookmarkContentList(apiKey, pageNum, pageSize);
+            console.log("response=",JSON.stringify(response))
+            if (response.code == 200) {
+                if (response.data.length === 0) {
+                    new Notice(`同步结束，成功同步`+count+`条数据`);
+                    return ;
+                }
+                count += response.data.length;
+                await bookmarkListWriteFile(app, defaultDirectory, response.data);
+
+            } else {
+                new Notice(`同步失败：`+response.msg);
+                return ;
+            }
+            pageNum++;
+        }
+
+    } catch (error) {
+        new Notice('同步失败：系统异常请稍后再试');
+        console.error('Error fetching bookmark content:', error);
+    }
+}
+
+
+async function bookmarkListWriteFile(app: any, defaultDirectory: string, BookmarkContentList: any[]): Promise<string> {
     const vault = app.vault;
     const basePath = path.join(vault.adapter.basePath, defaultDirectory);
 
-    for (const article of mockData) {
-        const { title, content, date } = article;
-        const [year, month, day] = date.split('-');
-
+    for (const bookmarkContent of BookmarkContentList) {
+        if (BookmarkContentList.length === 0) {
+            continue;
+        }
+        const [year, month, day] = bookmarkContent.create_time.substring(0, 10).split('-');
         // 创建目录
         const directoryPath = path.join(basePath, `${year}-${month}-${day}`);
         await createDirectory(directoryPath);
 
         // 创建文件
-        const filePath = path.join(directoryPath, `${title}.md`);
-        await createFile(filePath, content);
+        const cleanedFileName = FileNameUtils.cleanFileName(bookmarkContent.title) + '.md';
+        const filePath = path.join(directoryPath, cleanedFileName);
+        await createFile(filePath, bookmarkContent.markdown_content);
     }
-    new Notice(`同步结束`);
+    return 'Files created successfully'; // 返回一个字符串表示操作成功
 }
 
 // 创建目录
 async function createDirectory(directoryPath: string): Promise<void> {
     if (!fs.existsSync(directoryPath)) {
-        fs.mkdirSync(directoryPath, { recursive: true });
+        fs.mkdirSync(directoryPath, {recursive: true});
     }
 }
 
@@ -58,4 +74,4 @@ async function createFile(filePath: string, content: string): Promise<void> {
     fs.writeFileSync(filePath, content);
 }
 
-export { syncBookmarkData };
+export {syncBookmarkData};

@@ -50,7 +50,7 @@ export default class MyPlugin extends Plugin {
         }
 
         // 调用同步逻辑
-        await syncBookmarkData(this.app, this.settings.defaultDirectory);
+        await syncBookmarkData(this.app, this.settings.defaultDirectory,this.settings.apiKey);
     }
 }
 
