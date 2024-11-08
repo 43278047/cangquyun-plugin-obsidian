@@ -2,3 +2,5 @@
 /node_modules
 /build.sh
 *.sh
+/package-lock.json
+/yarn.lock
