@@ -1,0 +1,10 @@
+{
+	"id": "cangquyun-plugin-obsidian",
+	"name": "藏趣云 - 网页剪藏标注助手",
+	"minAppVersion": "1.0.0",
+	"description": "同步藏趣云网页剪藏和标注的数据至Obsidian中",
+	"author": "藏趣云",
+	"authorUrl": "https://www.cangquyun.com",
+	"isDesktopOnly": false,
+	"version": "1.0.0"
+}
