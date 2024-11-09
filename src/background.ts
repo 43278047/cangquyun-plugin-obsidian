@@ -55,6 +55,7 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         const filePath = path.join(directoryPath, cleanedFileName);
         // 模板
         const markdownContent = renderTemplate(bookmarkContent);
+        console.log("markdownContent=",markdownContent)
         if (!markdownContent){
             continue;
         }
