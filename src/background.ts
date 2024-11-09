@@ -11,8 +11,9 @@ async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: stri
     let pageNum = 1;
     let count = 0;
     let startTime = null;
-    let syncTime = null;
+    let syncTime:string = '';
     let newSyncTime = getCurrentBeijingTime();
+    try {
     if (myPluginInstance) {
         let settings = await myPluginInstance.getSettings();
         syncTime = settings.syncTime;
@@ -20,11 +21,11 @@ async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: stri
         console.log('MyPlugin instance is not available');
     }
 
-    try {
+
         startTime = dateTimeStringToTimestamp(syncTime);
-        console.log(startTime); // 输出时间戳（毫秒）
+        console.log("startTime =",startTime); // 输出时间戳（毫秒）
     } catch (error) {
-        console.error(error.message);
+
         new Notice('同步失败：时间格式错误，请检查时间格式是否为yyyy-MM-dd HH:mm:ss');
         return ;
     }
@@ -106,23 +107,6 @@ async function createFile(vault: Vault, filePath: string, content: string): Prom
     // 创建新的文件并写入内容
     await vault.create(filePath, content);
 }
-// 创建目录
-// async function createDirectory(vault:Vault,directoryPath: string): Promise<void> {
-//     if (!fs.existsSync(directoryPath)) {
-//         fs.mkdirSync(directoryPath, {recursive: true});
-//     }
-// }
-//
-// // 创建文件并写入内容
-// async function createFile(filePath: string, content: string): Promise<void> {
-//     // 如果文件存在，先删除它
-//     if (fs.existsSync(filePath)) {
-//         fs.unlinkSync(filePath);
-//     }
-//     // 创建新的文件并写入内容
-//     fs.writeFileSync(filePath, content);
-// }
-
 
 function getCurrentBeijingTime() {
     // 获取当前时间
@@ -142,7 +126,7 @@ function getCurrentBeijingTime() {
     // 返回格式化后的时间字符串
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-function dateTimeStringToTimestamp(dateTimeString) {
+function dateTimeStringToTimestamp(dateTimeString:string) {
     // 使用 Date.parse 解析时间字符串
     const timestamp = Date.parse(dateTimeString);
 
