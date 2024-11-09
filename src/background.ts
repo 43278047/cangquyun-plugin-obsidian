@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+
 import * as path from 'path';
 import {Notice, Vault} from 'obsidian';
 import {getBookmarkContentList} from './api';
@@ -39,7 +39,6 @@ async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: stri
 
 async function bookmarkListWriteFile(app: any, defaultDirectory: string, BookmarkContentList: any[]): Promise<string> {
     const vault = app.vault;
-    const basePath = path.join(vault.adapter.basePath, defaultDirectory);
 
     for (const bookmarkContent of BookmarkContentList) {
         if (BookmarkContentList.length === 0) {
@@ -47,8 +46,8 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         }
         const [year, month, day] = bookmarkContent.createTime.substring(0, 10).split('-');
         // 创建目录
-        const directoryPath = path.join(basePath, `${year}-${month}-${day}`);
-        await createDirectory(directoryPath);
+        const directoryPath = path.join(defaultDirectory, `${year}-${month}-${day}`);
+        await createDirectory(vault,directoryPath);
 
         // 创建文件
         const cleanedFileName = FileNameUtils.cleanFileName(bookmarkContent.title) + '.md';
@@ -59,26 +58,45 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         if (!markdownContent){
             continue;
         }
-        await createFile(filePath, bookmarkContent.markdownContent);
+        await createFile(vault,filePath, markdownContent);
     }
     return 'Files created successfully'; // 返回一个字符串表示操作成功
 }
 
 // 创建目录
-async function createDirectory(directoryPath: string): Promise<void> {
-    if (!fs.existsSync(directoryPath)) {
-        fs.mkdirSync(directoryPath, {recursive: true});
+async function createDirectory(vault: Vault, directoryPath: string): Promise<void> {
+    if (!await vault.adapter.exists(directoryPath)) {
+        await vault.createFolder(directoryPath);
     }
 }
 
 // 创建文件并写入内容
-async function createFile(filePath: string, content: string): Promise<void> {
-    // 如果文件存在，先删除它
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+async function createFile(vault: Vault, filePath: string, content: string): Promise<void> {
+    // 如果文件存在，先获取文件对象并删除它
+    if (await vault.adapter.exists(filePath)) {
+        const file = vault.getAbstractFileByPath(filePath);
+        if (file) {
+            await vault.delete(file);
+        }
     }
     // 创建新的文件并写入内容
-    fs.writeFileSync(filePath, content);
+    await vault.create(filePath, content);
 }
+// 创建目录
+// async function createDirectory(vault:Vault,directoryPath: string): Promise<void> {
+//     if (!fs.existsSync(directoryPath)) {
+//         fs.mkdirSync(directoryPath, {recursive: true});
+//     }
+// }
+//
+// // 创建文件并写入内容
+// async function createFile(filePath: string, content: string): Promise<void> {
+//     // 如果文件存在，先删除它
+//     if (fs.existsSync(filePath)) {
+//         fs.unlinkSync(filePath);
+//     }
+//     // 创建新的文件并写入内容
+//     fs.writeFileSync(filePath, content);
+// }
 
 export {syncBookmarkData};
