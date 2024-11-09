@@ -32,6 +32,9 @@ export default class MyPlugin extends Plugin {
         this.addRibbonIcon('sync', 'Sync Data', () => {
             this.syncData();
         });
+
+        (global as any).myPluginInstance = this;
+
     }
 
     async loadSettings() {
@@ -40,6 +43,16 @@ export default class MyPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    async getSettings() {
+        return this.settings;
+    }
+
+    async updateSettings(settings: MyPluginSettings) {
+        console.log("updateSettings =",settings)
+        this.settings = settings;
+        await this.saveSettings();
     }
 
     async syncData() {
@@ -178,12 +191,6 @@ class MySettingTab extends PluginSettingTab {
     displayFooter(containerEl: HTMLElement): void {
         const footerEl = containerEl.createEl('p');
         footerEl.innerHTML = '<a href="https://doc.cangquyun.com" target="_blank">意见反馈</a>   <a href="https://doc.cangquyun.com" target="_blank">更新日志</a> <a href="https://www.cangquyun.com" target="_blank">藏趣云官网</a>';
-        // // 更新日志
-        // const changelogEl = containerEl.createEl('p');
-        // changelogEl.innerHTML = ``;
-        //
-        // const versionElUrl = containerEl.createEl('p');
-        // versionElUrl.innerHTML = ``;
 
         const versionEl = containerEl.createEl('p');
         versionEl.innerHTML = `版本: v1.0.0`;
@@ -193,6 +200,9 @@ class MySettingTab extends PluginSettingTab {
     displayHeader(containerEl: HTMLElement): void {
         containerEl.createEl('h1', { text: '藏趣云 - 网页剪藏标注助手' });
 
-
     }
 }
+
+
+export const myPluginInstance = (global as any).myPluginInstance as MyPlugin;
+

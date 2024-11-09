@@ -1,4 +1,4 @@
-
+import { myPluginInstance } from './index';
 import * as path from 'path';
 import {Notice, Vault} from 'obsidian';
 import {getBookmarkContentList} from './api';
@@ -10,11 +10,29 @@ const pageSize = 50;
 async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: string): Promise<void> {
     let pageNum = 1;
     let count = 0;
+    let startTime = null;
+    let syncTime = null;
+    let newSyncTime = getCurrentBeijingTime();
+    if (myPluginInstance) {
+        let settings = await myPluginInstance.getSettings();
+        syncTime = settings.syncTime;
+    } else {
+        console.log('MyPlugin instance is not available');
+    }
+
+    try {
+        startTime = dateTimeStringToTimestamp(syncTime);
+        console.log(startTime); // 输出时间戳（毫秒）
+    } catch (error) {
+        console.error(error.message);
+        new Notice('同步失败：时间格式错误，请检查时间格式是否为yyyy-MM-dd HH:mm:ss');
+        return ;
+    }
+
     try {
         // 无限循环的翻页至到 response.data = []
         while (true) {
             const response = await getBookmarkContentList(apiKey, pageNum, pageSize);
-            console.log("response=",JSON.stringify(response))
             if (response.code == 200) {
                 if (response.data.length === 0) {
                     new Notice(`同步结束，成功同步`+count+`条数据`);
@@ -29,13 +47,19 @@ async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: stri
             }
             pageNum++;
         }
-
     } catch (error) {
         new Notice('同步失败：系统异常请稍后再试');
         console.error('Error fetching bookmark content:', error);
+        return ;
+    }
+
+    if (myPluginInstance) {
+        let settings = await myPluginInstance.getSettings();
+        // 设置为当前北京时间
+        settings.syncTime = newSyncTime;
+        await myPluginInstance.updateSettings(settings);
     }
 }
-
 
 async function bookmarkListWriteFile(app: any, defaultDirectory: string, BookmarkContentList: any[]): Promise<string> {
     const vault = app.vault;
@@ -54,7 +78,7 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         const filePath = path.join(directoryPath, cleanedFileName);
         // 模板
         const markdownContent = renderTemplate(bookmarkContent);
-        console.log("markdownContent=",markdownContent)
+        // console.log("markdownContent=",markdownContent)
         if (!markdownContent){
             continue;
         }
@@ -98,5 +122,37 @@ async function createFile(vault: Vault, filePath: string, content: string): Prom
 //     // 创建新的文件并写入内容
 //     fs.writeFileSync(filePath, content);
 // }
+
+
+function getCurrentBeijingTime() {
+    // 获取当前时间
+    const now = new Date();
+
+    // 设置时区为北京时间（东八区）
+    const beijingTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+
+    // 格式化日期和时间
+    const year = beijingTime.getFullYear();
+    const month = String(beijingTime.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需要加1
+    const day = String(beijingTime.getDate()).padStart(2, '0');
+    const hours = String(beijingTime.getHours()).padStart(2, '0');
+    const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
+    const seconds = String(beijingTime.getSeconds()).padStart(2, '0');
+
+    // 返回格式化后的时间字符串
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+function dateTimeStringToTimestamp(dateTimeString) {
+    // 使用 Date.parse 解析时间字符串
+    const timestamp = Date.parse(dateTimeString);
+
+    // 如果解析失败，返回 NaN
+    if (isNaN(timestamp)) {
+        throw new Error('Invalid date time string format');
+    }
+
+    return timestamp;
+}
+
 
 export {syncBookmarkData};

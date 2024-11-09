@@ -12,7 +12,7 @@ export default {
         file: 'dist/main.js', // 输出文件
         format: 'cjs', // 输出格式（CommonJS）
         name: 'CangquyunObsidian', // 全局变量名称
-        exports: 'default', // 显式设置导出模式为 default
+        exports:'named', // 显式设置导出模式为 default
     },
 
     external: ['obsidian', 'fs', 'path', 'events', 'domain', 'os', 'stream'], // 将这些模块标记为外部依赖
