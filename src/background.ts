@@ -54,10 +54,10 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         const cleanedFileName = FileNameUtils.cleanFileName(bookmarkContent.title) + '.md';
         const filePath = path.join(directoryPath, cleanedFileName);
         // 模板
-        // const markdownContent = renderTemplate(bookmarkContent);
-        // if (!markdownContent){
-        //     continue;
-        // }
+        const markdownContent = renderTemplate(bookmarkContent);
+        if (!markdownContent){
+            continue;
+        }
         await createFile(filePath, bookmarkContent.markdownContent);
     }
     return 'Files created successfully'; // 返回一个字符串表示操作成功

@@ -1,4 +1,4 @@
-
+import nunjucks from 'nunjucks';
 // 定义模板
 const template = `
 ## 页面信息
@@ -34,5 +34,5 @@ export function renderTemplate(data: BookmarkContent) {
     if (!data){
         return "";
     }
-    // return nunjucks.renderString(template, data);
+    return nunjucks.renderString(template, data);
 }
