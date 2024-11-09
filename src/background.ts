@@ -2,7 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {Notice, Vault} from 'obsidian';
 import {getBookmarkContentList} from './api';
-import FileNameUtils from "./utils"; // 假设你的文件名为 api.ts
+import FileNameUtils from "./utils";
+import {renderTemplate} from "./template";
 
 const pageSize = 50;
 // 同步函数
@@ -52,7 +53,12 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         // 创建文件
         const cleanedFileName = FileNameUtils.cleanFileName(bookmarkContent.title) + '.md';
         const filePath = path.join(directoryPath, cleanedFileName);
-        await createFile(filePath, bookmarkContent.markdown_content);
+        // 模板
+        const markdownContent = renderTemplate(bookmarkContent);
+        if (!markdownContent){
+            continue;
+        }
+        await createFile(filePath, markdownContent);
     }
     return 'Files created successfully'; // 返回一个字符串表示操作成功
 }

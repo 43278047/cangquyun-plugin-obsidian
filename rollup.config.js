@@ -1,6 +1,7 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
+import json from '@rollup/plugin-json';
 import { terser } from 'rollup-plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import copy from 'rollup-plugin-copy'; // 引入 copy 插件
@@ -13,12 +14,14 @@ export default {
         name: 'CangquyunObsidian', // 全局变量名称
         exports: 'default', // 显式设置导出模式为 default
     },
-    external: ['obsidian', 'fs', 'path'], // 将这些模块标记为外部依赖
+
+    external: ['obsidian', 'fs', 'path', 'events', 'domain', 'os', 'stream','fsevents'], // 将这些模块标记为外部依赖
     plugins: [
         resolve({
             preferBuiltins: true, // 优先使用内置模块
         }), // 解析第三方模块
         commonjs(), // 支持 CommonJS 模块
+        json(),
         typescript({
             tsconfig: './tsconfig.json', // 指定 tsconfig 文件路径
         }), // 支持 TypeScript
