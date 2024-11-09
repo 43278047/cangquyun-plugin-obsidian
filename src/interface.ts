@@ -5,25 +5,25 @@ interface ApiResponse {
 }
 
 interface BookmarkContent {
-    bookmark_id: string;
+    bookmarkId: string;
     title: string;
     url: string;
     urls: string;
-    markdown_content: string;
-    highlight_list: BookmarkHighlightsRsp[];
-    create_time: string;
-    update_time: string;
+    markdownContent: string;
+    highlightList: BookmarkHighlightsRsp[];
+    createTime: string;
+    updateTime: string;
 }
 
 interface BookmarkHighlightsRsp {
-    highlight_id: string;
-    bookmark_id: string;
-    color_type: number;
-    dashing_type: number;
-    annotation_content: string;
-    annotation_modify_content: string;
-    note_content: string;
+    highlightId: string;
+    bookmarkId: string;
+    colorType: number;
+    dashingType: number;
+    annotationContent: string;
+    annotationModifyContent: string;
+    noteContent: string;
     version: string;
-    create_time: string;
-    update_time: string;
+    createTime: string;
+    updateTime: string;
 }

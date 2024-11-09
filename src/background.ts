@@ -45,7 +45,7 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         if (BookmarkContentList.length === 0) {
             continue;
         }
-        const [year, month, day] = bookmarkContent.create_time.substring(0, 10).split('-');
+        const [year, month, day] = bookmarkContent.createTime.substring(0, 10).split('-');
         // 创建目录
         const directoryPath = path.join(basePath, `${year}-${month}-${day}`);
         await createDirectory(directoryPath);
@@ -54,11 +54,11 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         const cleanedFileName = FileNameUtils.cleanFileName(bookmarkContent.title) + '.md';
         const filePath = path.join(directoryPath, cleanedFileName);
         // 模板
-        const markdownContent = renderTemplate(bookmarkContent);
-        if (!markdownContent){
-            continue;
-        }
-        await createFile(filePath, markdownContent);
+        // const markdownContent = renderTemplate(bookmarkContent);
+        // if (!markdownContent){
+        //     continue;
+        // }
+        await createFile(filePath, bookmarkContent.markdownContent);
     }
     return 'Files created successfully'; // 返回一个字符串表示操作成功
 }
