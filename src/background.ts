@@ -1,7 +1,6 @@
 import * as path from 'path';
 import {Notice, Vault} from 'obsidian';
 import {getBookmarkContentList} from './api';
-import FileNameUtils from "./utils";
 import {renderTemplate} from "./template";
 import MyPlugin from "./index";
 import Utils from "./utils";
