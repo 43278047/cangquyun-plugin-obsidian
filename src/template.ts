@@ -31,5 +31,9 @@ export function renderTemplate(template:string, data: BookmarkContent) {
     if (!template || !template.trim()){
         template = defaultTemplate;
     }
-    return nunjucks.renderString(template, data);
+    try {
+        return nunjucks.renderString(template, data)
+    }catch (e) {
+        return "";
+    }
 }

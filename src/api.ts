@@ -1,8 +1,8 @@
 
 import {config} from "./config";
 
-export const getBookmarkContentList = async (apiKey: string, pageNum: number, pageSize: number): Promise<ApiResponse> => {
-    const url = config.BASE_URL + `/openApi/bookmarkContentList/v1?pageNum=${pageNum}&pageSize=${pageSize}`;
+export const getBookmarkContentList = async (apiKey: string, pageNum: number, pageSize: number, startTime: string): Promise<ApiResponse> => {
+    const url = config.BASE_URL + `/openApi/bookmarkContentList/v1?pageNum=${pageNum}&pageSize=${pageSize}&startTime=${startTime}`;
 
     const authHeader = apiKey.startsWith('Bearer ') ? apiKey : `Bearer ${apiKey}`;
 
@@ -11,6 +11,7 @@ export const getBookmarkContentList = async (apiKey: string, pageNum: number, pa
             method: 'GET',
             headers: {
                 'Authorization': authHeader,
+                'Plugin-Version': config.VERSION_NUM,
                 'Content-Type': 'application/json',
             },
         });

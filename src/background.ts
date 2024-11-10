@@ -13,7 +13,7 @@ async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
     new Notice('🚀 藏趣云 开始同步');
     let pageNum = 1;
     let count = 0;
-    let startTime = null;
+    let startTime = '';
     let syncTime: string = '';
     let newSyncTime = getCurrentBeijingTime();
     let template = '';
@@ -28,8 +28,14 @@ async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
         if (!defaultDirectory) {
             defaultDirectory = 'cangquyun';
         }
-        console.log('defaultDirectory =', defaultDirectory)
-        startTime = dateTimeStringToTimestamp(syncTime);
+        if (syncTime){
+            try {
+               startTime = dateTimeStringToTimestamp(syncTime);
+            }catch (e) {
+               startTime = '';
+            }
+        }
+
     } catch (error) {
         new Notice('同步失败：时间格式错误，请检查时间格式是否为yyyy-MM-dd HH:mm:ss');
         return;
@@ -38,7 +44,7 @@ async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
     try {
         // 无限循环的翻页至到 response.data = []
         while (true) {
-            const response = await getBookmarkContentList(apiKey, pageNum, pageSize);
+            const response = await getBookmarkContentList(apiKey, pageNum, pageSize, startTime);
             if (response.code == 200) {
                 if (response.data.length === 0) {
                     await updateSyncTime(plugin, newSyncTime);
@@ -47,7 +53,11 @@ async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
                 }
                 count += response.data.length;
                 await bookmarkListWriteFile(app, defaultDirectory, response.data, template);
-
+                if (response.data.length < pageSize){
+                    await updateSyncTime(plugin, newSyncTime);
+                    new Notice('🎉 藏趣云 已完成同步!');
+                    return;
+                }
             } else {
                 new Notice(`同步失败：` + response.msg);
                 return;
@@ -142,7 +152,7 @@ function dateTimeStringToTimestamp(dateTimeString: string) {
         throw new Error('Invalid date time string format');
     }
 
-    return timestamp;
+    return timestamp.toString();
 }
 
 

@@ -157,16 +157,16 @@ class MySettingTab extends PluginSettingTab {
         let name = new Setting(containerEl)
             .setName('API KEY');
         const descText = document.createElement('span');
-        descText.innerText = '请在PC端藏趣云网页的设置中，生成API KEY 填到此处，';
+        descText.innerText = '请在藏趣云网页端的设置页面里，生成Token 填到此处，';
         const link = document.createElement('a');
         link.href = 'https://www.cangquyun.com/openApi?sqType=USER&libraryId=0';
         link.target = '_blank';
-        link.innerText = '生成API KEY';
+        link.innerText = '前往生成Token';
         descText.appendChild(link);
         name.descEl.appendChild(descText);
 
         name.addText(text => text
-                .setPlaceholder('API KEY')
+                .setPlaceholder('Token')
                 .setValue(this.plugin.settings.apiKey)
                 .onChange(async (value) => {
                     this.plugin.settings.apiKey = value;
@@ -175,7 +175,6 @@ class MySettingTab extends PluginSettingTab {
     }
     displaySyncSettings(containerEl: HTMLElement): void {
         containerEl.createEl('h2', { text: '同步配置' });
-
 
         new Setting(containerEl)
             .setName('打开客户端是否同步')
@@ -212,10 +211,10 @@ class MySettingTab extends PluginSettingTab {
             .setDesc('设置同步频率，在客户端打开的时候，定时去同步文章数据')
             .addDropdown(dropdown => dropdown
                 .addOption('0', '关闭')
-                .addOption('1', '1分钟')
                 .addOption('5', '5分钟')
                 .addOption('15', '15分钟')
                 .addOption('30', '30分钟')
+                .addOption('60', '60分钟')
                 .setValue(this.plugin.settings.syncFrequency)
                 .onChange(async (value) => {
                     await this.plugin.updateSyncFrequency(value);
