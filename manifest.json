@@ -1,9 +1,9 @@
 {
-	"id": "cangquyun-plugin-obsidian",
+	"id": "cangquyun",
 	"name": "CangQuYun - WEB Snapshot Highlight Sync",
 	"minAppVersion": "0.12.10",
-	"description": "Sync CangQuYun web snapshot and highlight to Obsidian",
-	"author": "阿浩",
+	"description": "Sync CangQuYun web snapshot and highlight to notes",
+	"author": "Hao",
 	"authorUrl": "https://www.cangquyun.com",
 	"isDesktopOnly": false,
 	"version": "1.0.0"
