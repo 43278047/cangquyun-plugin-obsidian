@@ -1,14 +1,5 @@
-import { Plugin, Setting, App, Notice, PluginSettingTab} from 'obsidian';
+import { Plugin, Setting, App, Notice, PluginSettingTab } from 'obsidian';
 import { syncBookmarkData } from './background.js';
-
-interface MyPluginSettings {
-    apiKey: string;
-    syncOnOpen: boolean;
-    syncFrequency: string;
-    defaultDirectory: string;
-    syncTime: string;
-    template: string;
-}
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
     apiKey: '',
@@ -42,13 +33,15 @@ URL: {{ url }}
 
 export default class MyPlugin extends Plugin {
     settings!: MyPluginSettings;
+    private syncIntervalId: number | null = null;
+    private syncInProgress: boolean = false;
 
     async onload() {
         await this.loadSettings();
         this.addSettingTab(new MySettingTab(this.app, this));
 
-        if (this.settings.syncOnOpen){
-             this.syncData();
+        if (this.settings.syncOnOpen) {
+            this.syncData();
         }
 
         this.addRibbonIcon('sync', '同步藏趣云数据', () => {
@@ -57,6 +50,30 @@ export default class MyPlugin extends Plugin {
 
         (global as any).myPluginInstance = this;
 
+        // 启动定时任务
+        this.startSyncInterval();
+    }
+
+    onunload() {
+        this.stopSyncInterval();
+    }
+
+    private startSyncInterval() {
+        this.stopSyncInterval(); // 确保之前的定时任务被清除
+
+        const syncFrequency = parseInt(this.settings.syncFrequency, 10);
+        if (syncFrequency > 0) {
+            this.syncIntervalId = window.setInterval(() => {
+                this.syncData();
+            }, syncFrequency * 60 * 1000); // 将分钟转换为毫秒
+        }
+    }
+
+    private stopSyncInterval() {
+        if (this.syncIntervalId !== null) {
+            clearInterval(this.syncIntervalId);
+            this.syncIntervalId = null;
+        }
     }
 
     async loadSettings() {
@@ -72,20 +89,43 @@ export default class MyPlugin extends Plugin {
     }
 
     async updateSettings(settings: MyPluginSettings) {
-        console.log("updateSettings =",settings)
-        this.settings = settings;
+        console.log("updateSettings =", settings);
         await this.saveSettings();
+    }
+    async updateSyncFrequency(syncFrequency: string) {
+        console.log("updateSettings =", syncFrequency);
+        const newSyncFrequency = syncFrequency;
+        const oldSyncFrequency = this.settings.syncFrequency;
+        this.settings.syncFrequency = newSyncFrequency;
+        await this.saveSettings();
+
+        // 只有在 syncFrequency 发生变化时才重新启动定时任务
+        if (oldSyncFrequency !== newSyncFrequency) {
+            console.log("更新定时任务")
+            this.startSyncInterval();
+        }
     }
 
     async syncData() {
-        const apiKey = this.settings.apiKey;
-        if (!apiKey) {
-            new Notice('API KEY 未设置');
+        if (this.syncInProgress) {
+            new Notice('藏趣云同步任务正在进行中，请稍后再试!');
             return;
         }
 
-        // 调用同步逻辑
-        await syncBookmarkData(this.app, this.settings.defaultDirectory,this.settings.apiKey);
+        this.syncInProgress = true;
+
+        try {
+            const apiKey = this.settings.apiKey;
+            if (!apiKey) {
+                new Notice('API KEY 未设置');
+                return;
+            }
+
+            // 调用同步逻辑
+            await syncBookmarkData(this.app);
+        } finally {
+            this.syncInProgress = false;
+        }
     }
 }
 
@@ -127,7 +167,6 @@ class MySettingTab extends PluginSettingTab {
                     this.plugin.settings.apiKey = value;
                     await this.plugin.saveSettings();
                 }))
-
     }
     displaySyncSettings(containerEl: HTMLElement): void {
         containerEl.createEl('h2', { text: '同步配置' });
@@ -168,13 +207,14 @@ class MySettingTab extends PluginSettingTab {
             .setDesc('设置同步频率，在客户端打开的时候，定时去同步文章数据')
             .addDropdown(dropdown => dropdown
                 .addOption('0', '关闭')
+                .addOption('1', '1分钟')
                 .addOption('5', '5分钟')
                 .addOption('15', '15分钟')
                 .addOption('30', '30分钟')
                 .setValue(this.plugin.settings.syncFrequency)
                 .onChange(async (value) => {
-                    this.plugin.settings.syncFrequency = value;
-                    await this.plugin.saveSettings();
+                    // this.plugin.settings.syncFrequency = value;
+                    await this.plugin.updateSyncFrequency(value);
                 }));
     }
 
@@ -228,6 +268,4 @@ class MySettingTab extends PluginSettingTab {
     }
 }
 
-
 export const myPluginInstance = (global as any).myPluginInstance as MyPlugin;
-

@@ -1,6 +1,6 @@
 import nunjucks from 'nunjucks';
-// 定义模板
-const template =
+// 定义默认模板
+const defaultTemplate =
 `---
 标题: {{ title }}
 URL: {{ url }}
@@ -24,9 +24,12 @@ URL: {{ url }}
 {% endif %}
 `;
 
-export function renderTemplate(data: BookmarkContent) {
+export function renderTemplate(template:string, data: BookmarkContent) {
     if (!data){
         return "";
+    }
+    if (!template || !template.trim()){
+        template = defaultTemplate;
     }
     return nunjucks.renderString(template, data);
 }

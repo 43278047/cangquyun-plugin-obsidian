@@ -1,4 +1,4 @@
-import { myPluginInstance } from './index';
+import {myPluginInstance} from './index';
 import * as path from 'path';
 import {Notice, Vault} from 'obsidian';
 import {getBookmarkContentList} from './api';
@@ -6,28 +6,38 @@ import FileNameUtils from "./utils";
 import {renderTemplate} from "./template";
 
 const pageSize = 50;
+
 // 同步函数
-async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: string): Promise<void> {
+async function syncBookmarkData(app: any): Promise<void> {
+    new Notice('🚀 藏趣云 开始同步');
     let pageNum = 1;
     let count = 0;
     let startTime = null;
-    let syncTime:string = '';
+    let syncTime: string = '';
     let newSyncTime = getCurrentBeijingTime();
+    let template = '';
+    let apiKey = '';
+    let defaultDirectory = '';
     try {
-    if (myPluginInstance) {
-        let settings = await myPluginInstance.getSettings();
-        syncTime = settings.syncTime;
-    } else {
-        console.log('MyPlugin instance is not available');
-    }
-
-
+        if (myPluginInstance) {
+            let settings = await myPluginInstance.getSettings();
+            syncTime = settings.syncTime;
+            template = settings.template;
+            apiKey = settings.apiKey;
+            defaultDirectory = settings.defaultDirectory;
+            if (!defaultDirectory) {
+                defaultDirectory = 'cangquyun';
+            }
+        } else {
+            new Notice('系统错误，获取藏趣云配置失败');
+            console.log('MyPlugin instance is not available');
+            return;
+        }
         startTime = dateTimeStringToTimestamp(syncTime);
-        console.log("startTime =",startTime); // 输出时间戳（毫秒）
+        console.log("startTime =", startTime); // 输出时间戳（毫秒）
     } catch (error) {
-
         new Notice('同步失败：时间格式错误，请检查时间格式是否为yyyy-MM-dd HH:mm:ss');
-        return ;
+        return;
     }
 
     try {
@@ -36,22 +46,22 @@ async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: stri
             const response = await getBookmarkContentList(apiKey, pageNum, pageSize);
             if (response.code == 200) {
                 if (response.data.length === 0) {
-                    new Notice(`同步结束，成功同步`+count+`条数据`);
-                    return ;
+                    new Notice('🎉 藏趣云 已完成同步!');
+                    return;
                 }
                 count += response.data.length;
-                await bookmarkListWriteFile(app, defaultDirectory, response.data);
+                await bookmarkListWriteFile(app, defaultDirectory, response.data, template);
 
             } else {
-                new Notice(`同步失败：`+response.msg);
-                return ;
+                new Notice(`同步失败：` + response.msg);
+                return;
             }
             pageNum++;
         }
     } catch (error) {
-        new Notice('同步失败：系统异常请稍后再试');
+        new Notice('同步中断：系统异常请稍后再试');
         console.error('Error fetching bookmark content:', error);
-        return ;
+        return;
     }
 
     if (myPluginInstance) {
@@ -62,7 +72,7 @@ async function syncBookmarkData(app: any, defaultDirectory: string, apiKey: stri
     }
 }
 
-async function bookmarkListWriteFile(app: any, defaultDirectory: string, BookmarkContentList: any[]): Promise<string> {
+async function bookmarkListWriteFile(app: any, defaultDirectory: string, BookmarkContentList: any[], template: string): Promise<string> {
     const vault = app.vault;
 
     for (const bookmarkContent of BookmarkContentList) {
@@ -72,20 +82,19 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         const [year, month, day] = bookmarkContent.createTime.substring(0, 10).split('-');
         // 创建目录
         const directoryPath = path.join(defaultDirectory, `${year}-${month}-${day}`);
-        await createDirectory(vault,directoryPath);
+        await createDirectory(vault, directoryPath);
 
         // 创建文件
         const cleanedFileName = FileNameUtils.cleanFileName(bookmarkContent.title) + '.md';
         const filePath = path.join(directoryPath, cleanedFileName);
         // 模板
-        const markdownContent = renderTemplate(bookmarkContent);
-        // console.log("markdownContent=",markdownContent)
-        if (!markdownContent){
+        const markdownContent = renderTemplate(template, bookmarkContent);
+        if (!markdownContent) {
             continue;
         }
-        await createFile(vault,filePath, markdownContent);
+        await createFile(vault, filePath, markdownContent);
     }
-    return 'Files created successfully'; // 返回一个字符串表示操作成功
+    return 'success'; // 返回一个字符串表示操作成功
 }
 
 // 创建目录
@@ -113,7 +122,7 @@ function getCurrentBeijingTime() {
     const now = new Date();
 
     // 设置时区为北京时间（东八区）
-    const beijingTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+    const beijingTime = new Date(now.toLocaleString('en-US', {timeZone: 'Asia/Shanghai'}));
 
     // 格式化日期和时间
     const year = beijingTime.getFullYear();
@@ -126,7 +135,8 @@ function getCurrentBeijingTime() {
     // 返回格式化后的时间字符串
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-function dateTimeStringToTimestamp(dateTimeString:string) {
+
+function dateTimeStringToTimestamp(dateTimeString: string) {
     // 使用 Date.parse 解析时间字符串
     const timestamp = Date.parse(dateTimeString);
 

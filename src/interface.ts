@@ -27,3 +27,13 @@ interface BookmarkHighlightsRsp {
     createTime: string;
     updateTime: string;
 }
+
+interface MyPluginSettings {
+    apiKey: string;
+    syncOnOpen: boolean;
+    syncFrequency: string;
+    defaultDirectory: string;
+    syncTime: string;
+    template: string;
+}
+
