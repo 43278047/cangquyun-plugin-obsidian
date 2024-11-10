@@ -1,4 +1,4 @@
-import {Modal, Plugin, Setting, App, Notice, PluginSettingTab} from 'obsidian';
+import { Plugin, Setting, App, Notice, PluginSettingTab} from 'obsidian';
 import { syncBookmarkData } from './background.js';
 
 interface MyPluginSettings {
@@ -7,6 +7,7 @@ interface MyPluginSettings {
     syncFrequency: string;
     defaultDirectory: string;
     syncTime: string;
+    template: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -15,6 +16,28 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
     syncFrequency: '0',
     defaultDirectory: 'cangquyun',
     syncTime: '2024-10-01 00:00:00',
+    template: `---
+标题: {{ title }}
+URL: {{ url }}
+创建时间: {{ createTime }}
+更新时间: {{ updateTime }}
+---
+{% if highlightList.length > 0 %}
+## 划线列表
+{% for item in highlightList %}
+>{{ item.annotationContent }}^{{ item.highlightId }}
+{% if item.noteContent %}
+
+{{ item.noteContent }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if markdownContent %}
+## 全文剪藏
+{{ markdownContent }}
+{% endif %}
+`,
 }
 
 export default class MyPlugin extends Plugin {
@@ -28,8 +51,7 @@ export default class MyPlugin extends Plugin {
              this.syncData();
         }
 
-        // 创建一个侧边快捷按钮
-        this.addRibbonIcon('sync', 'Sync Data', () => {
+        this.addRibbonIcon('sync', '同步藏趣云数据', () => {
             this.syncData();
         });
 
@@ -104,39 +126,35 @@ class MySettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.apiKey = value;
                     await this.plugin.saveSettings();
-                    console.log('设置API Setting 1: ' + value);
                 }))
 
     }
-        // 同步配置
     displaySyncSettings(containerEl: HTMLElement): void {
-        // 添加标题
         containerEl.createEl('h2', { text: '同步配置' });
 
 
         new Setting(containerEl)
-            .setName('打开app是否同步')
-            .setDesc('打开app就同步')
+            .setName('打开客户端是否同步')
+            .setDesc('打开客户端就触发文章同步任务')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.syncOnOpen)
                 .onChange(async (value) => {
                     this.plugin.settings.syncOnOpen = value;
                     await this.plugin.saveSettings();
-                    console.log('打开app是否同步: ' + value);
                 }));
 
         new Setting(containerEl)
             .setName('手动同步')
-            .setDesc('同步一次')
+            .setDesc('手动触发同步一次，同步范围是上次同步时间之后的所有数据，如果你需要同步全量的数据，把上次同步时间置空即可')
             .addButton(button => button
                 .setButtonText('同步一次')
                 .onClick(() => {
-                    window.open('https://doc.cangquyun.com', '_blank');
+                    this.plugin.syncData();
                 }));
 
         new Setting(containerEl)
             .setName('上次同步时间')
-            .setDesc('只会同步此时间之后的数据')
+            .setDesc('每次同步，只会同步此时间之后的文章数据')
             .addText(text => text
                 .setPlaceholder('')
                 .setValue(this.plugin.settings.syncTime)
@@ -145,10 +163,9 @@ class MySettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
-        // 新增的设置项：设置同步频率
         new Setting(containerEl)
             .setName('定时同步')
-            .setDesc('设置同步频率')
+            .setDesc('设置同步频率，在客户端打开的时候，定时去同步文章数据')
             .addDropdown(dropdown => dropdown
                 .addOption('0', '关闭')
                 .addOption('5', '5分钟')
@@ -158,20 +175,16 @@ class MySettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.syncFrequency = value;
                     await this.plugin.saveSettings();
-                    console.log('设置同步频率: ' + value);
                 }));
     }
 
-    // 规则配置
     displayRuleSettings(containerEl: HTMLElement): void {
-        // 添加标题
         containerEl.createEl('h2', { text: '规则配置' });
-
         new Setting(containerEl)
-            .setName('默认目录')
-            .setDesc('默认目录')
+            .setName('同步文章根目录')
+            .setDesc('同步文章的根目录，所有的数据都会存在这个目录下面')
             .addText(text => text
-                .setPlaceholder('')
+                .setPlaceholder('默认目录cangquyun')
                 .setValue(this.plugin.settings.defaultDirectory)
                 .onChange(async (value) => {
                     this.plugin.settings.defaultDirectory = value;
@@ -179,26 +192,38 @@ class MySettingTab extends PluginSettingTab {
                     console.log('设置默认目录: ' + value);
                 }));
 
-        new Setting(containerEl)
-            .setName('配置同步模板格式')
-            .setDesc('同步配置配置')
-            .addButton(button => button
-                .setButtonText('配置模板')
-                .onClick(() => {
-                    window.open('https://doc.cangquyun.com', '_blank');
-                }));
+
+        const setting = new Setting(containerEl)
+            .setName('文章模板');
+        const descText = document.createElement('span');
+        descText.innerText = '如果要使用自定义文章模板，可以根据教程自己配置 ';
+        const link = document.createElement('a');
+        link.href = 'https://doc.cangquyun.com';
+        link.target = '_blank';
+        link.innerText = '查看模板配置教程';
+        descText.appendChild(link);
+        setting.descEl.appendChild(descText);
+        setting.addTextArea(text => text
+            .setPlaceholder('')
+            .setValue(this.plugin.settings.template)
+            .onChange(async (value) => {
+                this.plugin.settings.template = value;
+                await this.plugin.saveSettings();
+            })
+            .then((textArea) => {
+                // 设置高度和宽度
+                textArea.inputEl.style.height = '200px';
+                textArea.inputEl.style.width = '400px';
+            }));
+
     }
     displayFooter(containerEl: HTMLElement): void {
         const footerEl = containerEl.createEl('p');
-        footerEl.innerHTML = '<a href="https://doc.cangquyun.com" target="_blank">意见反馈</a>   <a href="https://doc.cangquyun.com" target="_blank">更新日志</a> <a href="https://www.cangquyun.com" target="_blank">藏趣云官网</a>';
-
-        const versionEl = containerEl.createEl('p');
-        versionEl.innerHTML = `版本: v1.0.0`;
+        footerEl.innerHTML = '意见反馈邮箱:43278047@qq.com   <a href="https://doc.cangquyun.com" target="_blank">更新日志</a> <a href="https://www.cangquyun.com" target="_blank">藏趣云官网</a>';
     }
 
-
     displayHeader(containerEl: HTMLElement): void {
-        containerEl.createEl('h1', { text: '藏趣云 - 网页剪藏标注助手' });
+        containerEl.createEl('h1', { text: '藏趣云 - 网页剪藏标注同步助手' });
 
     }
 }
