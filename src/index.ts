@@ -89,11 +89,10 @@ export default class MyPlugin extends Plugin {
     }
 
     async updateSettings(settings: MyPluginSettings) {
-        console.log("updateSettings =", settings);
+        this.settings = settings;
         await this.saveSettings();
     }
     async updateSyncFrequency(syncFrequency: string) {
-        console.log("updateSettings =", syncFrequency);
         const newSyncFrequency = syncFrequency;
         const oldSyncFrequency = this.settings.syncFrequency;
         this.settings.syncFrequency = newSyncFrequency;
@@ -101,7 +100,6 @@ export default class MyPlugin extends Plugin {
 
         // 只有在 syncFrequency 发生变化时才重新启动定时任务
         if (oldSyncFrequency !== newSyncFrequency) {
-            console.log("更新定时任务")
             this.startSyncInterval();
         }
     }
@@ -121,8 +119,7 @@ export default class MyPlugin extends Plugin {
                 return;
             }
 
-            // 调用同步逻辑
-            await syncBookmarkData(this.app);
+            await syncBookmarkData(this.app,this);
         } finally {
             this.syncInProgress = false;
         }
@@ -157,10 +154,18 @@ class MySettingTab extends PluginSettingTab {
     }
 
     displaySyncUserSettings(containerEl: HTMLElement): void {
-        new Setting(containerEl)
-            .setName('API KEY')
-            .setDesc('请在PC端藏趣云网页的设置中,生成API KEY 填到此处')
-            .addText(text => text
+        let name = new Setting(containerEl)
+            .setName('API KEY');
+        const descText = document.createElement('span');
+        descText.innerText = '请在PC端藏趣云网页的设置中，生成API KEY 填到此处，';
+        const link = document.createElement('a');
+        link.href = 'https://www.cangquyun.com/openApi?sqType=USER&libraryId=0';
+        link.target = '_blank';
+        link.innerText = '生成API KEY';
+        descText.appendChild(link);
+        name.descEl.appendChild(descText);
+
+        name.addText(text => text
                 .setPlaceholder('API KEY')
                 .setValue(this.plugin.settings.apiKey)
                 .onChange(async (value) => {
@@ -193,7 +198,7 @@ class MySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('上次同步时间')
-            .setDesc('每次同步，只会同步此时间之后的文章数据')
+            .setDesc('每次同步，只会同步此时间之后的文章数据，如果为空则会同步全量的数据')
             .addText(text => text
                 .setPlaceholder('')
                 .setValue(this.plugin.settings.syncTime)
@@ -213,7 +218,6 @@ class MySettingTab extends PluginSettingTab {
                 .addOption('30', '30分钟')
                 .setValue(this.plugin.settings.syncFrequency)
                 .onChange(async (value) => {
-                    // this.plugin.settings.syncFrequency = value;
                     await this.plugin.updateSyncFrequency(value);
                 }));
     }
@@ -229,7 +233,6 @@ class MySettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.defaultDirectory = value;
                     await this.plugin.saveSettings();
-                    console.log('设置默认目录: ' + value);
                 }));
 
 
@@ -268,4 +271,3 @@ class MySettingTab extends PluginSettingTab {
     }
 }
 
-export const myPluginInstance = (global as any).myPluginInstance as MyPlugin;

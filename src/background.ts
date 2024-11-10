@@ -1,14 +1,15 @@
-import {myPluginInstance} from './index';
 import * as path from 'path';
 import {Notice, Vault} from 'obsidian';
 import {getBookmarkContentList} from './api';
 import FileNameUtils from "./utils";
 import {renderTemplate} from "./template";
+import MyPlugin from "./index";
 
 const pageSize = 50;
 
 // 同步函数
-async function syncBookmarkData(app: any): Promise<void> {
+async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
+
     new Notice('🚀 藏趣云 开始同步');
     let pageNum = 1;
     let count = 0;
@@ -19,22 +20,16 @@ async function syncBookmarkData(app: any): Promise<void> {
     let apiKey = '';
     let defaultDirectory = '';
     try {
-        if (myPluginInstance) {
-            let settings = await myPluginInstance.getSettings();
-            syncTime = settings.syncTime;
-            template = settings.template;
-            apiKey = settings.apiKey;
-            defaultDirectory = settings.defaultDirectory;
-            if (!defaultDirectory) {
-                defaultDirectory = 'cangquyun';
-            }
-        } else {
-            new Notice('系统错误，获取藏趣云配置失败');
-            console.log('MyPlugin instance is not available');
-            return;
+        let settings = plugin.settings;
+        syncTime = settings.syncTime;
+        template = settings.template;
+        apiKey = settings.apiKey;
+        defaultDirectory = settings.defaultDirectory;
+        if (!defaultDirectory) {
+            defaultDirectory = 'cangquyun';
         }
+        console.log('defaultDirectory =', defaultDirectory)
         startTime = dateTimeStringToTimestamp(syncTime);
-        console.log("startTime =", startTime); // 输出时间戳（毫秒）
     } catch (error) {
         new Notice('同步失败：时间格式错误，请检查时间格式是否为yyyy-MM-dd HH:mm:ss');
         return;
@@ -46,6 +41,7 @@ async function syncBookmarkData(app: any): Promise<void> {
             const response = await getBookmarkContentList(apiKey, pageNum, pageSize);
             if (response.code == 200) {
                 if (response.data.length === 0) {
+                    await updateSyncTime(plugin, newSyncTime);
                     new Notice('🎉 藏趣云 已完成同步!');
                     return;
                 }
@@ -64,12 +60,13 @@ async function syncBookmarkData(app: any): Promise<void> {
         return;
     }
 
-    if (myPluginInstance) {
-        let settings = await myPluginInstance.getSettings();
-        // 设置为当前北京时间
-        settings.syncTime = newSyncTime;
-        await myPluginInstance.updateSettings(settings);
-    }
+
+}
+async function updateSyncTime(plugin: MyPlugin, newSyncTime: string){
+    let settings = await plugin.getSettings();
+    // 设置为当前北京时间
+    settings.syncTime = newSyncTime;
+    await plugin.updateSettings(settings);
 }
 
 async function bookmarkListWriteFile(app: any, defaultDirectory: string, BookmarkContentList: any[], template: string): Promise<string> {
