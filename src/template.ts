@@ -31,9 +31,22 @@ export function renderTemplate(template:string, data: BookmarkContent) {
     if (!template || !template.trim()){
         template = defaultTemplate;
     }
+    template = initTemplate(template);
     try {
         return nunjucks.renderString(template, data)
     }catch (e) {
         return "";
     }
+}
+
+
+// 前置处理 处理模板
+export function initTemplate(template:string) {
+
+    // 把 {{ markdownContent }} 转成 {{ markdownContent | safe }}
+    template = template.replace(/{{\s*markdownContent\s*}}/g, '{{ markdownContent | safe }}');
+    template = template.replace(/{{\s*item.noteContent\s*}}/g, '{{ item.noteContent | safe }}');
+
+
+    return template;
 }
