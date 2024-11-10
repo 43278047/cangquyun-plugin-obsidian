@@ -4,6 +4,7 @@ import {getBookmarkContentList} from './api';
 import FileNameUtils from "./utils";
 import {renderTemplate} from "./template";
 import MyPlugin from "./index";
+import Utils from "./utils";
 
 const pageSize = 50;
 
@@ -15,7 +16,7 @@ async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
     let count = 0;
     let startTime = '';
     let syncTime: string = '';
-    let newSyncTime = getCurrentBeijingTime();
+    let newSyncTime = Utils.getCurrentBeijingTime();
     let template = '';
     let apiKey = '';
     let defaultDirectory = '';
@@ -30,7 +31,7 @@ async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
         }
         if (syncTime){
             try {
-               startTime = dateTimeStringToTimestamp(syncTime);
+               startTime = Utils.dateTimeStringToTimestamp(syncTime);
             }catch (e) {
                startTime = '';
             }
@@ -92,7 +93,7 @@ async function bookmarkListWriteFile(app: any, defaultDirectory: string, Bookmar
         await createDirectory(vault, directoryPath);
 
         // 创建文件
-        const cleanedFileName = FileNameUtils.cleanFileName(bookmarkContent.title) + '.md';
+        const cleanedFileName = Utils.cleanFileName(bookmarkContent.title) + '.md';
         const filePath = path.join(directoryPath, cleanedFileName);
         // 模板
         const markdownContent = renderTemplate(template, bookmarkContent);
@@ -124,36 +125,7 @@ async function createFile(vault: Vault, filePath: string, content: string): Prom
     await vault.create(filePath, content);
 }
 
-function getCurrentBeijingTime() {
-    // 获取当前时间
-    const now = new Date();
 
-    // 设置时区为北京时间（东八区）
-    const beijingTime = new Date(now.toLocaleString('en-US', {timeZone: 'Asia/Shanghai'}));
-
-    // 格式化日期和时间
-    const year = beijingTime.getFullYear();
-    const month = String(beijingTime.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需要加1
-    const day = String(beijingTime.getDate()).padStart(2, '0');
-    const hours = String(beijingTime.getHours()).padStart(2, '0');
-    const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
-    const seconds = String(beijingTime.getSeconds()).padStart(2, '0');
-
-    // 返回格式化后的时间字符串
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
-
-function dateTimeStringToTimestamp(dateTimeString: string) {
-    // 使用 Date.parse 解析时间字符串
-    const timestamp = Date.parse(dateTimeString);
-
-    // 如果解析失败，返回 NaN
-    if (isNaN(timestamp)) {
-        throw new Error('Invalid date time string format');
-    }
-
-    return timestamp.toString();
-}
 
 
 export {syncBookmarkData};
