@@ -261,7 +261,7 @@ class MySettingTab extends PluginSettingTab {
     }
     displayFooter(containerEl: HTMLElement): void {
         const footerEl = containerEl.createEl('p');
-        footerEl.innerHTML = '意见反馈邮箱:43278047@qq.com   <a href="https://doc.cangquyun.com" target="_blank">更新日志</a> <a href="https://www.cangquyun.com" target="_blank">藏趣云官网</a>';
+        footerEl.innerHTML = '意见反馈邮箱:43278047@qq.com   <a href="https://cangquyun.com/updateLog" target="_blank">更新日志</a> <a href="https://www.cangquyun.com" target="_blank">藏趣云官网</a>';
     }
 
     displayHeader(containerEl: HTMLElement): void {
