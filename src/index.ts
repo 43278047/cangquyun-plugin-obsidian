@@ -258,7 +258,7 @@ class MySettingTab extends PluginSettingTab {
 
     }
     displayFooter(containerEl: HTMLElement): void {
-        const footerEl = containerEl.createEl('p', { cls: 'cangquyun-setting-footer' });
+        const footerEl = containerEl.createEl('p');
         const email = document.createTextNode('意见反馈邮箱:43278047@qq.com');
         const updateLogLink = document.createElement('a');
         updateLogLink.href = 'https://cangquyun.com/updateLog';
@@ -277,6 +277,6 @@ class MySettingTab extends PluginSettingTab {
     }
 
     displayHeader(containerEl: HTMLElement): void {
-        containerEl.createEl('h1', { text: '藏趣云 - 网页剪藏标注同步助手', cls: 'cangquyun-setting-header' });
+        containerEl.createEl('h1', { text: '藏趣云 - 网页剪藏标注同步助手'});
     }
 }
