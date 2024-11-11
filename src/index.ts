@@ -31,7 +31,7 @@ URL: {{ url }}
 `,
 }
 
-export default class MyPlugin extends Plugin {
+export default class CangQuYunPlugin extends Plugin {
     settings!: MyPluginSettings;
     private syncIntervalId: number | null = null;
     private syncInProgress: boolean = false;
@@ -47,8 +47,6 @@ export default class MyPlugin extends Plugin {
         this.addRibbonIcon('sync', '同步藏趣云数据', () => {
             this.syncData();
         });
-
-        (global as any).myPluginInstance = this;
 
         // 启动定时任务
         this.startSyncInterval();
@@ -127,9 +125,9 @@ export default class MyPlugin extends Plugin {
 }
 
 class MySettingTab extends PluginSettingTab {
-    plugin: MyPlugin;
+    plugin: CangQuYunPlugin;
 
-    constructor(app: App, plugin: MyPlugin) {
+    constructor(app: App, plugin: CangQuYunPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -166,12 +164,12 @@ class MySettingTab extends PluginSettingTab {
         name.descEl.appendChild(descText);
 
         name.addText(text => text
-                .setPlaceholder('Token')
-                .setValue(this.plugin.settings.apiKey)
-                .onChange(async (value) => {
-                    this.plugin.settings.apiKey = value;
-                    await this.plugin.saveSettings();
-                }))
+            .setPlaceholder('Token')
+            .setValue(this.plugin.settings.apiKey)
+            .onChange(async (value) => {
+                this.plugin.settings.apiKey = value;
+                await this.plugin.saveSettings();
+            }))
     }
     displaySyncSettings(containerEl: HTMLElement): void {
         containerEl.createEl('h2', { text: '同步配置' });
@@ -244,6 +242,8 @@ class MySettingTab extends PluginSettingTab {
         link.target = '_blank';
         link.innerText = '查看模板配置教程';
         descText.appendChild(link);
+        descText.style.minHeight = '200px';
+        descText.style.width = '400px';
         setting.descEl.appendChild(descText);
         setting.addTextArea(text => text
             .setPlaceholder('')
@@ -253,20 +253,30 @@ class MySettingTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
             })
             .then((textArea) => {
-                // 设置高度和宽度
-                textArea.inputEl.style.height = '200px';
-                textArea.inputEl.style.width = '400px';
+                // textArea.inputEl.classList.add('cangquyun-textarea'); // 使用 CSS 类
             }));
 
     }
     displayFooter(containerEl: HTMLElement): void {
-        const footerEl = containerEl.createEl('p');
-        footerEl.innerHTML = '意见反馈邮箱:43278047@qq.com   <a href="https://cangquyun.com/updateLog" target="_blank">更新日志</a> <a href="https://www.cangquyun.com" target="_blank">藏趣云官网</a>';
+        const footerEl = containerEl.createEl('p', { cls: 'cangquyun-setting-footer' });
+        const email = document.createTextNode('意见反馈邮箱:43278047@qq.com');
+        const updateLogLink = document.createElement('a');
+        updateLogLink.href = 'https://cangquyun.com/updateLog';
+        updateLogLink.target = '_blank';
+        updateLogLink.innerText = '更新日志';
+        const officialSiteLink = document.createElement('a');
+        officialSiteLink.href = 'https://www.cangquyun.com';
+        officialSiteLink.target = '_blank';
+        officialSiteLink.innerText = '藏趣云官网';
+
+        footerEl.appendChild(email);
+        footerEl.appendChild(document.createTextNode(' '));
+        footerEl.appendChild(updateLogLink);
+        footerEl.appendChild(document.createTextNode(' '));
+        footerEl.appendChild(officialSiteLink);
     }
 
     displayHeader(containerEl: HTMLElement): void {
-        containerEl.createEl('h1', { text: '藏趣云 - 网页剪藏标注同步助手' });
-
+        containerEl.createEl('h1', { text: '藏趣云 - 网页剪藏标注同步助手', cls: 'cangquyun-setting-header' });
     }
 }
-

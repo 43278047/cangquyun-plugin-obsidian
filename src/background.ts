@@ -2,13 +2,13 @@ import * as path from 'path';
 import {Notice, Vault} from 'obsidian';
 import {getBookmarkContentList} from './api';
 import {renderTemplate} from "./template";
-import MyPlugin from "./index";
+import CangQuYunPlugin from "./index";
 import Utils from "./utils";
 
 const pageSize = 50;
 
 // 同步函数
-async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
+async function syncBookmarkData(app: any, plugin: CangQuYunPlugin): Promise<void> {
 
     new Notice('🚀 藏趣云 开始同步');
     let pageNum = 1;
@@ -72,7 +72,7 @@ async function syncBookmarkData(app: any, plugin: MyPlugin): Promise<void> {
 
 
 }
-async function updateSyncTime(plugin: MyPlugin, newSyncTime: string){
+async function updateSyncTime(plugin: CangQuYunPlugin, newSyncTime: string){
     let settings = await plugin.getSettings();
     // 设置为当前北京时间
     settings.syncTime = newSyncTime;

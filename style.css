@@ -1,3 +1,26 @@
-#cangquyun{
 
+.cangquyun-setting-header {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.cangquyun-setting-footer {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #888;
+}
+
+.cangquyun-setting-footer a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.cangquyun-setting-footer a:hover {
+    text-decoration: underline;
+}
+
+.cangquyun-textarea {
+    height: 200px;
+    width: 400px;
 }
