@@ -12,6 +12,7 @@ export const getBookmarkContentList = async (apiKey: string, pageNum: number, pa
             headers: {
                 'Authorization': authHeader,
                 'Plugin-Version': config.VERSION_NUM,
+                'Plugin-Channel': config.CHANNEL,
                 'Content-Type': 'application/json',
             },
         });
