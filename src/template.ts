@@ -13,14 +13,14 @@ URL: {{ url }}
 >{{ item.annotationContent }}^{{ item.highlightId }}
 {% if item.noteContent %}
 
-{{ item.noteContent }}
+{{ item.noteContent | safe }}
 {% endif %}
 {% endfor %}
 {% endif %}
 
 {% if markdownContent %}
 ## 全文剪藏
-{{ markdownContent }}
+{{ markdownContent | safe }}
 {% endif %}
 `;
 
